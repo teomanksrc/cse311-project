@@ -1,0 +1,14 @@
+{# Expects: chart (labels, scores) and chart_label. Renders a Chart.js bar chart. #}
+{{ chart|json_script:"chart-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const data = JSON.parse(document.getElementById("chart-data").textContent);
+  new Chart(document.getElementById("po-chart"), {
+    type: "bar",
+    data: {
+      labels: data.labels,
+      datasets: [{ label: "{{ chart_label }}", data: data.scores, backgroundColor: "#2a7ab9" }],
+    },
+    options: { scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } },
+  });
+</script>

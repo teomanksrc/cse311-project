@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Department overview{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Department overview: average score per Program Outcome</h1>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <canvas id="po-chart" height="110"></canvas>
+  </div>
+</div>
+
+<table class="table table-bordered bg-white">
+  <thead class="table-light"><tr><th>Program outcome</th><th>Average</th><th>Students</th><th>Incomplete</th></tr></thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      <td>PO{{ row.po.number }} &ndash; {{ row.po.short_name }}</td>
+      <td>{% if row.average is None %}<span class="text-muted">no data</span>{% else %}{{ row.average }}{% endif %}</td>
+      <td>{{ row.students }}</td>
+      <td>{{ row.incomplete }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block scripts %}{% include "scoring/_bar_chart.html" with chart_label="Average score" %}{% endblock %}

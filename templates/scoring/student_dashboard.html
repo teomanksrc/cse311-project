@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}My PO profile{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">My Program Outcome profile</h1>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <canvas id="po-chart" height="110"></canvas>
+    <table class="table table-sm mt-3 mb-0">
+      <thead><tr><th>Program outcome</th><th>Score</th></tr></thead>
+      <tbody>
+      {% for row in profile %}
+        <tr>
+          <td>PO{{ row.po.number }} &ndash; {{ row.po.short_name }}</td>
+          <td>
+            {% if row.score is None %}<span class="text-muted">no data</span>
+            {% else %}{{ row.score }}{% if row.incomplete %} <span class="badge text-bg-warning">incomplete</span>{% endif %}{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h2 class="h5 mb-3">By course</h2>
+{% for course in courses %}
+<div class="card shadow-sm mb-3">
+  <div class="card-header fw-semibold">{{ course.offering }}</div>
+  <div class="card-body row">
+    <div class="col-md-6">
+      <h3 class="h6">Grades</h3>
+      <ul class="list-unstyled mb-0">
+        {% for grade in course.grades %}<li>{{ grade.assessment.name }}: <strong>{{ grade.score }}</strong></li>
+        {% empty %}<li class="text-muted">No grades yet.</li>{% endfor %}
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h3 class="h6">Learning outcomes</h3>
+      <ul class="list-unstyled mb-0">
+        {% for item in course.lo_scores %}
+        <li>{{ item.lo.code }}: <strong>{{ item.score }}</strong>{% if item.incomplete %} <span class="badge text-bg-warning">incomplete</span>{% endif %}</li>
+        {% empty %}<li class="text-muted">No scores yet.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% empty %}
+<p class="text-muted">You are not enrolled in any course.</p>
+{% endfor %}
+{% endblock %}
+{% block scripts %}{% include "scoring/_bar_chart.html" with chart_label="Score" %}{% endblock %}
