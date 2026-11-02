@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Enter grades{% endblock %}
+{% block content %}
+<a href="{% url 'grading:instructor_home' %}" class="small">&larr; My courses</a>
+<h1 class="h3 mb-1">{{ assessment.name }}</h1>
+<p class="text-muted">{{ assessment.offering }} &middot; leave a cell empty for "no grade yet"</p>
+
+<form method="post">
+  {% csrf_token %}
+  <table class="table table-bordered bg-white align-middle" style="max-width: 640px">
+    <thead class="table-light"><tr><th>Student</th><th>No.</th><th style="width: 160px">Grade (0-100)</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td>{{ row.enrollment.student }}</td>
+        <td>{{ row.enrollment.student.student_number|default:"" }}</td>
+        <td>
+          <input class="form-control{% if row.error %} is-invalid{% endif %}" type="text" inputmode="decimal"
+                 name="score_{{ row.enrollment.id }}" value="{{ row.value }}">
+          {% if row.error %}<div class="invalid-feedback">{{ row.error }}</div>{% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="3" class="text-muted">No students are enrolled.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if rows %}<button class="btn btn-primary" type="submit">Save grades</button>{% endif %}
+</form>
+{% endblock %}

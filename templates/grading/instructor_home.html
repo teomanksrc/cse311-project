@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}My courses{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">My course offerings</h1>
+{% for offering in offerings %}
+<div class="card shadow-sm mb-3">
+  <div class="card-header fw-semibold">{{ offering.course.code }} &ndash; {{ offering.course.name }} <span class="text-muted">({{ offering.term }})</span></div>
+  <ul class="list-group list-group-flush">
+    {% for assessment in offering.assessments.all %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      {{ assessment.name }}
+      <a class="btn btn-sm btn-primary" href="{% url 'grading:enter_grades' assessment.id %}">Enter grades</a>
+    </li>
+    {% empty %}
+    <li class="list-group-item text-muted">No assessments defined yet.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% empty %}
+<p class="text-muted">You have no course offerings assigned.</p>
+{% endfor %}
+{% endblock %}
