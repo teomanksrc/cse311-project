@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: po_system_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-po_system}
+      POSTGRES_USER: ${POSTGRES_USER:-po_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-po_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - po_system_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-po_user} -d ${POSTGRES_DB:-po_system}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  po_system_pgdata:
