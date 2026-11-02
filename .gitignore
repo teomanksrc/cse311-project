@@ -8,3 +8,6 @@ db.sqlite3
 staticfiles/
 .idea/
 .vscode/
+
+# Report Word files are handed in as hardcopy, not kept in the repository
+reports/*.docx
