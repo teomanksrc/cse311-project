@@ -1,7 +1,7 @@
 # PO Score Management System
 
-Web system that manages each student's Program Outcome (PO) scores for Acibadem CSE.
-CSE 311 (Software) and CSE 321 (Data Systems) team project, Fall 2026. Stack: Python 3.12 + Django 5.2 + PostgreSQL.
+Web system that manages each student's Program Outcome (PO) scores.
+CSE 311 and CSE 321 team project, Fall 2026. Stack: Python 3.12 + Django 5.2 + PostgreSQL.
 
 Assessment grades -> Learning Outcomes -> Program Outcomes, every step a weighted average:
 `score = sum(weight x score) / sum(weights)`.
