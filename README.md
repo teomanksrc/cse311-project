@@ -40,8 +40,6 @@ Open http://127.0.0.1:8000/ and log in:
 | `head` | Department Head | Department averages per PO |
 | `admin` | Admin | Department view + `/admin/` |
 
-Password for all demo users: `1234`. Usernames are case-sensitive.
-
 If PowerShell blocks `Activate.ps1`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or call `.\.venv\Scripts\python` directly.
 
 ## Setup on macOS / Linux (Terminal)
