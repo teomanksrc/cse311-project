@@ -8,6 +8,7 @@ from accounts.models import User
 from accounts.permissions import role_required
 from curriculum.models import CourseOffering, ProgramOutcome
 from grading.models import Enrollment
+from reporting.rules import LOW_SCORE_THRESHOLD
 from scoring.models import DepartmentPOStat, StudentLOScore, StudentPOScore
 from scoring.stats import refresh_department_stats
 
@@ -34,6 +35,9 @@ def student_dashboard(request):
             }
         )
 
+    # Compare the full-precision score; the rounded one is for display only.
+    low_scores = [row for row in profile if row["po"].id in scores and scores[row["po"].id].score < LOW_SCORE_THRESHOLD]
+
     courses = []
     enrollments = Enrollment.objects.filter(student=request.user).select_related("offering__course")
     for enrollment in enrollments:
@@ -53,7 +57,17 @@ def student_dashboard(request):
         "labels": [f"PO{row['po'].number}" for row in profile],
         "scores": [row["score"] for row in profile],
     }
-    return render(request, "scoring/student_dashboard.html", {"profile": profile, "courses": courses, "chart": chart})
+    return render(
+        request,
+        "scoring/student_dashboard.html",
+        {
+            "profile": profile,
+            "courses": courses,
+            "chart": chart,
+            "low_scores": low_scores,
+            "threshold": LOW_SCORE_THRESHOLD,
+        },
+    )
 
 
 @role_required(User.Role.ADMIN, User.Role.HEAD)

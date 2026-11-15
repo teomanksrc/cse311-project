@@ -54,9 +54,13 @@ Answers to the open design questions in the project guidelines (slide 8).
 | Refresh policy for that view | Refresh **once, after the writing transaction has committed** (`scoring.stats.refresh_department_stats()`, called by the grade-entry and import views, `seed_demo`, `seed_load` and the `refresh_stats` command). It is **not** called from `recompute_student` or the signals. Reason: `REFRESH MATERIALIZED VIEW` takes an exclusive lock on the view until its transaction ends, and a recompute holds student row locks (`SELECT ... FOR UPDATE`). Transaction A holding the view lock while waiting for a student row, and transaction B holding that student row while waiting for the view, is a deadlock. Plain `REFRESH` (not `CONCURRENTLY`) is used: 11 rows refresh in milliseconds, and `CONCURRENTLY` cannot run inside a transaction block, which is where Django tests and atomic views run. |
 | Accepted staleness of the dashboard | Edits made through the **Django admin site** do not pass through our views, so the department dashboard can be stale after such an edit until the next refresh (the "Refresh" button on the dashboard, `manage.py refresh_stats`, or the next grade save). This is the accepted trade-off of a materialized view. The student dashboard is never stale: it reads the cached score tables, which are rewritten in the same transaction as the change. |
 
+## Low-score alerts
+
+A PO score below 60 (`reporting.rules.LOW_SCORE_THRESHOLD`) shows a warning on the student dashboard (computed live) and can trigger an e-mail. `POAlert` (one row per student and PO) remembers what was mailed (`emailed_at`), so a student is not mailed twice about the same low score. If the score recovers, the alert row is deleted; if it drops again later, a new alert is created and mailed again. **E-mail is never sent from signals or from the recompute.** Those run inside the grade-saving transaction and hold student row locks, so a slow or failing mail server would block or roll back grade entry. Instead `sync_alerts()` and `send_pending_alerts()` run on their own: `manage.py send_alerts` (for a scheduled job) or the "Send low-score alerts" button on the department dashboard. A message is marked as sent only after the mail backend accepted it; students without an e-mail address stay pending. By default the console backend prints the message in the terminal; real SMTP is configured with `EMAIL_*` environment variables.
+
 ## Integrations (possible, planned)
 
-Acibadem OBS export/import of grades and POs, LMS grade import, CSV/Excel bulk grade ingestion, email notifications when scores change.
+Acibadem OBS export/import of grades and POs, LMS grade import, CSV/Excel bulk grade ingestion, email notifications when scores change (low-score alerts are built, see above).
 
 ## Planned features (not built)
 
