@@ -92,13 +92,11 @@ erDiagram
 
 ## Final row counts and sizes (CSE 321 report)
 
-Fill in at the end of the project, from the production-like database:
+Measured with `python manage.py db_stats` on a generated 2,000-student database: see `docs/performance.md` for the table
+(rows, columns, table / index / total size per table), the query plans and the index decision. The materialized view
+`scoring_department_po_stats` (unmanaged model `DepartmentPOStat`) holds the 11 department averages.
 
-```sql
-SELECT relname, n_live_tup, pg_size_pretty(pg_total_relation_size(relid))
-FROM pg_stat_user_tables ORDER BY relname;
-```
+## Planned for the final
 
-## Planned for the final (not built yet)
-
-Index tuning from real query plans, a materialized view for department averages, partitioning of `grading_grade` by term, replication and failure handling.
+Partitioning of `grading_grade` by term and a read replica are **plans only**, described in `docs/scalability.md`
+together with the fault-tolerance measures (backups, restore, atomic saves).
