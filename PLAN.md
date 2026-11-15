@@ -40,18 +40,24 @@ on its own: ruff, `makemigrations --check`, full test suite on PostgreSQL (final
 | 5 | `feature/alerts-and-coverage` | Batuhan Büyüknacar | E5 PO coverage, E4 alerts |
 | 6 | `feature/cd-pipeline` | teomanksrc | Dockerfile, `cd.yml`, backlog and this file |
 
-The branches are stacked (each contains the previous one). On GitHub, open one pull request per branch
-with base `develop` and merge them **in this order** using "Create a merge commit". `gh` is not installed
-on this PC, so pull requests are opened in the browser. Commits carry no Claude co-author line (user rule).
+All six pull requests (#1-#6) were merged into `develop` by the user on 2026-11-15, each with a merge
+commit, and `develop` was then merged into `main` (which also carries two README edits made on GitHub on
+9 Nov). Commits carry no Claude co-author line (user rule). `gh` is not installed on this PC, so pull
+requests are opened in the browser.
 
 Still to do:
-- Merge the six pull requests, then `develop` -> `main`. `cd.yml` only starts working once it is on `main`;
-  its first run on GitHub is untested. The ghcr.io package may be created private: check its visibility.
-- After the merges: `git checkout develop && git pull`, delete the local feature branches.
+- Check on GitHub that the CI run on `main` passed and that the CD run after it published the image to
+  ghcr.io. This was the first real run of `cd.yml`. If the package was created private, change its
+  visibility in the package settings.
+- Check the Contributors graph shows all four members (it counts commits on `main`).
 - Richer demo data (20-30 students, all 11 POs covered; no demo score is below 60, so alerts do not show).
   Run `seed_demo` before the demo to restore the guideline example values.
-- Update diagrams and both final reports (new tables, materialized view, Gemini, alerts, CD; Redis and OBS dropped).
+- Update diagrams and both final reports (new tables, materialized view, Gemini, alerts, CD; Redis and OBS
+  dropped; feature branches and pull requests are now in use; the "never stale" claim needs the
+  materialized-view caveat).
 - `CLAUDE.md` still lists these features as out of scope and does not mention `reporting/` or `alerts/`.
+- Optional: narrow the syllabus prompt so that an explicit PO mapping in the syllabus is not extended
+  with extra POs (seen with the CSE331 syllabus; the user chose to leave it for now).
 
 Dropped: D3 dashboard filters. Velocity wording in the report is the team's own call.
 
