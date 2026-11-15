@@ -68,6 +68,29 @@ python manage.py runserver
 
 Then open http://127.0.0.1:8000/ and log in with the same users as above.
 
+## Moving to another machine (for example the presentation laptop)
+
+The database is not in the repository, so a new machine starts empty. Two ways to get the demo data there:
+
+**A. Rebuild it (recommended).** `seed_showcase` produces exactly the same data on every machine.
+
+1. Start Docker Desktop, then follow the setup steps above for that platform up to `python manage.py migrate`.
+2. Run `python manage.py seed_showcase` instead of `seed_demo` (26 students, 6 courses, all 11 POs; takes about half a minute).
+3. Copy the `GEMINI_API_KEY` line from the old machine's `.env` into the new `.env`. Without it the AI commentary and syllabus upload are off; everything else works.
+4. Run `python manage.py runserver`, log in as a few students and open "My report" once, so the AI reports are generated before the presentation (the free tier can be slow).
+
+Not carried over this way: anything entered by hand on the old machine (extra courses, changed grades, stored reports).
+
+**B. Copy the database as it is.**
+
+1. Old machine: `python manage.py backup_db` writes `backups/po_system_<timestamp>.dump`.
+2. Copy that file into the `backups/` folder on the new machine (the folder is git-ignored).
+3. New machine: set up as above up to `python manage.py migrate`, then
+   `python manage.py restore_db backups/po_system_<timestamp>.dump --yes` (this overwrites the database).
+4. Copy the `GEMINI_API_KEY` line as in A.
+
+Before presenting: start Docker **before** `runserver`, check the internet connection (Bootstrap and Chart.js come from a CDN), and run `python manage.py seed_showcase` once to reset any grades changed while testing.
+
 Notes for both platforms:
 - The database is not part of the repository. Every machine starts empty and `seed_demo` creates the demo data. Changes made in one machine's database do not appear on another.
 - If PostgreSQL is not reachable, the app silently falls back to SQLite (a warning is printed when the server starts). Start Docker **before** `runserver`, otherwise you may be looking at a different database than you expect.
