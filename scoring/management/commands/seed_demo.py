@@ -22,6 +22,7 @@ from curriculum.models import (
     ProgramOutcome,
 )
 from grading.models import Enrollment, Grade
+from scoring.stats import refresh_department_stats
 
 DEMO_PASSWORD = "1234"
 TERM = "2026-Fall"
@@ -110,8 +111,12 @@ def upsert_user(username, role, first_name, last_name, student_number=None):
 class Command(BaseCommand):
     help = "Create demo data: POs, courses, weights, users and grades (idempotent)."
 
-    @transaction.atomic
     def handle(self, *args, **options):
+        self.seed(options)
+        refresh_department_stats()  # after the commit, see scoring/stats.py
+
+    @transaction.atomic
+    def seed(self, options):
         upsert_user("admin", User.Role.ADMIN, "System", "Admin")
         upsert_user("head", User.Role.HEAD, "Head", "Of Department")
         instructor = upsert_user("instructor", User.Role.INSTRUCTOR, "Ahmet", "Instructor")

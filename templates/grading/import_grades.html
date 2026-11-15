@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Import grades{% endblock %}
+{% block content %}
+<a href="{% url 'grading:instructor_home' %}" class="small">&larr; My courses</a>
+<h1 class="h3 mb-1">Import grades</h1>
+<p class="text-muted">{{ offering.course.code }} &ndash; {{ offering.course.name }} ({{ offering.term }})</p>
+
+<div class="card shadow-sm mb-3" style="max-width: 720px">
+  <div class="card-body">
+    <p class="mb-2">Upload a <strong>.csv</strong> (comma or semicolon separated) or <strong>.xlsx</strong> file, up to 1 MB.</p>
+    <ul class="small">
+      <li>First column: <code>student_number</code>. Other columns: the name of an assessment ({% for a in assessments %}<code>{{ a.name }}</code>{% if not forloop.last %}, {% endif %}{% empty %}none defined yet{% endfor %}).</li>
+      <li>One row per student. Each cell is a number from 0 to 100, or empty to keep the current grade.</li>
+      <li>If any cell is invalid, nothing is imported.</li>
+    </ul>
+    <a href="{% url 'grading:import_template' offering.id %}">Download template (Excel)</a>
+  </div>
+</div>
+
+{% if errors %}
+<div class="alert alert-danger" style="max-width: 720px">
+  <strong>{{ errors|length }} problem(s) found:</strong>
+  <ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" style="max-width: 720px">
+  {% csrf_token %}
+  <input class="form-control mb-3" type="file" name="file" accept=".csv,.xlsx" required>
+  <button class="btn btn-primary" type="submit">Import</button>
+</form>
+{% endblock %}

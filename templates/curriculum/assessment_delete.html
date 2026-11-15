@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Delete assessment{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Delete assessment {{ assessment.name }}?</h1>
+<div class="alert alert-warning" style="max-width: 560px">
+  This will also remove {{ grade_count }} grade(s) and the weights of this assessment. Scores will be recalculated.
+</div>
+<form method="post">
+  {% csrf_token %}
+  <button class="btn btn-danger" type="submit">Delete</button>
+  <a class="btn btn-outline-secondary" href="{% url 'curriculum:offering_setup' offering.id %}">Cancel</a>
+</form>
+{% endblock %}

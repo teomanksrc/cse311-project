@@ -18,7 +18,7 @@ Status: **Done** = exists in the current foundation, **Todo** = not built yet.
 |---|---|---|---|
 | B1 | As a head, I can manage the 11 POs | 2 | Done (admin site) |
 | B2 | As a head, I can create courses, offerings and assign instructors | 3 | Done (admin site) |
-| B3 | As an instructor, I can define LOs, assessments and weights for my offering | 5 | Todo (instructor UI; admin site works today) |
+| B3 | As an instructor, I can define LOs, assessments and weights for my offering | 5 | Done |
 | B4 | As an instructor, weights are validated (positive, 1-5) | 2 | Done |
 
 ## Epic C: Grades and scores
@@ -36,26 +36,26 @@ Status: **Done** = exists in the current foundation, **Todo** = not built yet.
 |---|---|---|---|
 | D1 | As a student, I see my PO profile as a chart plus per-course LO breakdown | 5 | Done |
 | D2 | As a head, I see the average score per PO | 3 | Done |
-| D3 | As a head, I can filter the department view by course, term or student group | 5 | Todo |
+| D3 | As a head, I can filter the department view by course, term or student group | 5 | Dropped (low value for the effort) |
 
 ## Epic E: Innovative features (the higher bar)
 
 | # | User story | Pts | Status |
 |---|---|---|---|
-| E1 | As an instructor, I upload a syllabus and the LOs/assessments/weights are proposed automatically | 8 | Todo |
-| E2 | As an instructor, I import grades in bulk from CSV/Excel | 5 | Todo |
-| E3 | As a head, I generate a student or cohort performance report (PDF) | 8 | Todo |
-| E4 | As a student, I get an alert when a PO falls below a threshold | 5 | Todo |
-| E5 | As a head, I see which POs are weakly covered by the current syllabi | 5 | Todo |
+| E1 | As an instructor, I upload a syllabus and the LOs/assessments/weights are proposed automatically | 8 | Done (Gemini proposes, instructor approves) |
+| E2 | As an instructor, I import grades in bulk from CSV/Excel | 5 | Done |
+| E3 | As a head, I generate a student or cohort performance report (PDF) | 8 | Done per student (rule-based summary + AI commentary, print to PDF); cohort report Todo |
+| E4 | As a student, I get an alert when a PO falls below a threshold | 5 | Done (dashboard warning + e-mail) |
+| E5 | As a head, I see which POs are weakly covered by the current syllabi | 5 | Done |
 
 ## Epic F: Data systems (CSE 321)
 
 | # | User story | Pts | Status |
 |---|---|---|---|
-| F1 | Index tuning from real query plans | 3 | Todo |
-| F2 | Materialized view for department averages | 5 | Todo |
-| F3 | Partitioning and replication plan | 5 | Todo |
-| F4 | Failure handling and backups | 3 | Todo |
+| F1 | Index tuning from real query plans | 3 | Done (measured: no extra index needed, see docs/performance.md) |
+| F2 | Materialized view for department averages | 5 | Done |
+| F3 | Partitioning and replication plan | 5 | Done (plan in docs/scalability.md) |
+| F4 | Failure handling and backups | 3 | Done |
 
 ## Proposed sprints (1 week each)
 
@@ -63,8 +63,8 @@ Midterms to plan around: CSE 311 on 10 Nov and 22 Dec, CSE 321 on 19 Nov and 24 
 
 | Sprint | Dates | Goal | Stories |
 |---|---|---|---|
-| 1 | 26 Oct - 1 Nov | Foundation, models, scoring | A1, A3, B1, B2, B4, C2 |
-| 2 | 2 - 8 Nov | Grades, dashboards, CI, docs; **checkpoint prep** | A2, C1, C3, C4, D1, D2 |
+| 1 | 26 Oct - 1 Nov | Setup, data model, scoring engine, grade entry (**27 pts**) | A1, A3, B2, C1, C2, C4 |
+| 2 | 2 - 8 Nov | PO management, validation, CI, incomplete scores, dashboards; **checkpoint prep** (**18 pts**) | A2, B1, B4, C3, D1, D2 |
 | Checkpoint | 12 / 17 Nov | Presentations and reports | |
 | 3 | 18 - 29 Nov | Instructor UI, bulk import | B3, E2 |
 | 4 | 30 Nov - 6 Dec | Syllabus upload | E1 |
@@ -73,4 +73,4 @@ Midterms to plan around: CSE 311 on 10 Nov and 22 Dec, CSE 321 on 19 Nov and 24 
 | 7 | 21 - 27 Dec | Hardening, polish, final report | F4, E5 |
 | Final | 29 - 30 Dec | Demo and hardcopy report | |
 
-Velocity so far: fill in at the end of each sprint (points Done / sprint). Difficulty is rated with Fibonacci story points in planning.
+Velocity so far: Sprint 1 = 27 points, Sprint 2 = 18 points (average 22.5). The heavier work was done in the first week; in the second week other courses' exams were approaching, so lighter stories were taken. Difficulty is rated with Fibonacci story points in planning.

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Delete learning outcome{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Delete learning outcome {{ lo.code }}?</h1>
+<div class="alert alert-warning" style="max-width: 560px">
+  This will also remove {{ counts.assessment_weights }} assessment weight(s),
+  {{ counts.po_weights }} program outcome weight(s) and {{ counts.lo_scores }} student score(s).
+  Program outcome scores will be recalculated.
+</div>
+<form method="post">
+  {% csrf_token %}
+  <button class="btn btn-danger" type="submit">Delete</button>
+  <a class="btn btn-outline-secondary" href="{% url 'curriculum:offering_setup' offering.id %}">Cancel</a>
+</form>
+{% endblock %}

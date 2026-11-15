@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Setup {{ offering }}{% endblock %}
+{% block content %}
+<a href="{% url 'grading:instructor_home' %}" class="small">&larr; My courses</a>
+<h1 class="h3 mb-1">Setup: {{ offering.course.code }} &ndash; {{ offering.course.name }}</h1>
+<p class="text-muted">{{ offering.term }}</p>
+<a class="btn btn-outline-primary mb-3" href="{% url 'curriculum:syllabus_upload' offering.id %}">Upload syllabus</a>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center fw-semibold">
+        Learning outcomes
+        <a class="btn btn-sm btn-primary" href="{% url 'curriculum:lo_create' offering.id %}">Add</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for lo in los %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span><strong>{{ lo.code }}</strong> {{ lo.description }}</span>
+          <span class="text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'curriculum:lo_edit' offering.id lo.id %}">Edit</a>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'curriculum:lo_delete' offering.id lo.id %}">Delete</a>
+          </span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">No learning outcomes yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center fw-semibold">
+        Assessments
+        <a class="btn btn-sm btn-primary" href="{% url 'curriculum:assessment_create' offering.id %}">Add</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for assessment in assessments %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ assessment.name }}
+          <span class="text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'curriculum:assessment_edit' offering.id assessment.id %}">Rename</a>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'curriculum:assessment_delete' offering.id assessment.id %}">Delete</a>
+          </span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">No assessments yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2 class="h5">Assessment &rarr; learning outcome weights</h2>
+<p class="text-muted small">Any positive number (e.g. 0.6). Leave a cell empty for "no link".</p>
+{% if assessments and los %}
+<form method="post" action="{% url 'curriculum:assessment_weights' offering.id %}" class="mb-4">
+  {% csrf_token %}
+  <table class="table table-bordered bg-white align-middle w-auto">
+    <thead class="table-light"><tr><th>Assessment</th>{% for lo in los %}<th>{{ lo.code }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in assessment_rows %}
+      <tr>
+        <th>{{ row.assessment.name }}</th>
+        {% for cell in row.cells %}
+        <td style="min-width: 110px">
+          <input class="form-control{% if cell.error %} is-invalid{% endif %}" type="text" inputmode="decimal"
+                 name="{{ cell.name }}" value="{{ cell.value }}">
+          {% if cell.error %}<div class="invalid-feedback">{{ cell.error }}</div>{% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <button class="btn btn-primary" type="submit">Save assessment weights</button>
+</form>
+{% else %}
+<p class="text-muted">Add at least one assessment and one learning outcome first.</p>
+{% endif %}
+
+<h2 class="h5">Learning outcome &rarr; program outcome weights</h2>
+<p class="text-muted small">Whole numbers 1-5. Leave a cell empty for "no link".</p>
+{% if los and pos %}
+<form method="post" action="{% url 'curriculum:po_weights' offering.id %}" class="mb-4">
+  {% csrf_token %}
+  <div class="table-responsive">
+  <table class="table table-bordered bg-white align-middle w-auto">
+    <thead class="table-light"><tr><th>LO</th>{% for po in pos %}<th>PO{{ po.number }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in po_rows %}
+      <tr>
+        <th>{{ row.lo.code }}</th>
+        {% for cell in row.cells %}
+        <td style="min-width: 80px">
+          <input class="form-control{% if cell.error %} is-invalid{% endif %}" type="text" inputmode="numeric"
+                 name="{{ cell.name }}" value="{{ cell.value }}">
+          {% if cell.error %}<div class="invalid-feedback">{{ cell.error }}</div>{% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <button class="btn btn-primary" type="submit">Save program outcome weights</button>
+</form>
+{% else %}
+<p class="text-muted">Add at least one learning outcome first.</p>
+{% endif %}
+{% endblock %}

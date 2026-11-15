@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Student reports{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Student reports</h1>
+<table class="table table-bordered bg-white">
+  <thead class="table-light"><tr><th>Student</th><th>Student number</th><th>Latest report</th><th></th></tr></thead>
+  <tbody>
+  {% for s in students %}
+    <tr>
+      <td>{{ s }}</td>
+      <td>{{ s.student_number|default:"" }}</td>
+      <td>{% if s.last_report %}{{ s.last_report|date:"Y-m-d H:i" }}{% else %}<span class="text-muted">none</span>{% endif %}</td>
+      <td>
+        {% if s.last_report %}
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'reporting:student_report' s.id %}">Open</a>
+        {% else %}
+        <form method="post" action="{% url 'reporting:student_report' s.id %}" class="d-inline">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-primary" type="submit">Generate</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4" class="text-muted">No students.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

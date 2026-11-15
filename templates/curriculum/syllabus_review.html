@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Review syllabus proposal{% endblock %}
+{% block content %}
+<a href="{% url 'curriculum:syllabus_upload' offering.id %}" class="small">&larr; Upload</a>
+<h1 class="h3 mb-1">Review proposal: {{ offering.course.code }}</h1>
+<p class="text-muted">{{ offering.term }}. This was proposed by an AI and may contain mistakes. Nothing is saved until you press Apply.
+Items that already exist are skipped, never overwritten. You can edit everything on the setup page afterwards.</p>
+
+{% if warnings %}
+<div class="alert alert-warning">
+  <strong>Some parts of the AI reply were dropped:</strong>
+  <ul class="mb-0">{% for warning in warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<h2 class="h5">Learning outcomes</h2>
+<table class="table table-bordered bg-white w-auto">
+  <thead class="table-light"><tr><th>Code</th><th>Description</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for lo in los %}
+    <tr><td>{{ lo.code }}</td><td>{{ lo.description }}</td>
+      <td>{% if lo.exists %}<span class="text-muted">already exists, will be skipped</span>{% else %}<span class="badge text-bg-success">new</span>{% endif %}</td></tr>
+  {% empty %}
+    <tr><td colspan="3" class="text-muted">None proposed.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2 class="h5">Assessments</h2>
+<table class="table table-bordered bg-white w-auto">
+  <thead class="table-light"><tr><th>Name</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for a in assessments %}
+    <tr><td>{{ a.name }}</td>
+      <td>{% if a.exists %}<span class="text-muted">already exists, will be skipped</span>{% else %}<span class="badge text-bg-success">new</span>{% endif %}</td></tr>
+  {% empty %}
+    <tr><td colspan="2" class="text-muted">None proposed.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2 class="h5">Assessment &rarr; learning outcome weights</h2>
+<table class="table table-bordered bg-white w-auto">
+  <thead class="table-light"><tr><th>Assessment</th><th>LO</th><th>Weight</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for link in lo_links %}
+    <tr><td>{{ link.assessment }}</td><td>{{ link.lo }}</td><td>{{ link.weight }}</td>
+      <td>{% if link.exists %}<span class="text-muted">already exists, will be skipped</span>{% else %}<span class="badge text-bg-success">new</span>{% endif %}</td></tr>
+  {% empty %}
+    <tr><td colspan="4" class="text-muted">None proposed.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2 class="h5">Learning outcome &rarr; program outcome weights</h2>
+<table class="table table-bordered bg-white w-auto">
+  <thead class="table-light"><tr><th>LO</th><th>PO</th><th>Weight (1-5)</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for link in po_links %}
+    <tr><td>{{ link.lo }}</td><td>PO{{ link.po }}</td><td>{{ link.weight }}</td>
+      <td>{% if link.exists %}<span class="text-muted">already exists, will be skipped</span>{% else %}<span class="badge text-bg-success">new</span>{% endif %}</td></tr>
+  {% empty %}
+    <tr><td colspan="4" class="text-muted">None proposed.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="d-flex gap-2 mb-4">
+  <form method="post" action="{% url 'curriculum:syllabus_apply' offering.id %}">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit">Apply</button>
+  </form>
+  <form method="post" action="{% url 'curriculum:syllabus_discard' offering.id %}">
+    {% csrf_token %}
+    <button class="btn btn-outline-secondary" type="submit">Discard</button>
+  </form>
+</div>
+{% endblock %}

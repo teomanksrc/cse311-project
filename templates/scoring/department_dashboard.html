@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Department overview{% endblock %}
 {% block content %}
-<h1 class="h3 mb-4">Department overview: average score per Program Outcome</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Department overview: average score per Program Outcome</h1>
+  <div class="d-flex gap-2">
+    <form method="post" action="{% url 'scoring:refresh_department' %}" class="mb-0">
+      {% csrf_token %}
+      <button class="btn btn-outline-secondary" type="submit" title="Needed after edits made in the admin site">Refresh</button>
+    </form>
+    <form method="post" action="{% url 'alerts:send' %}" class="mb-0">
+      {% csrf_token %}
+      <button class="btn btn-outline-secondary" type="submit" title="E-mail students who have a PO below the threshold">Send low-score alerts</button>
+    </form>
+    <a class="btn btn-outline-primary" href="{% url 'scoring:po_coverage' %}">PO coverage</a>
+    <a class="btn btn-outline-primary" href="{% url 'reporting:student_list' %}">Student reports</a>
+  </div>
+</div>
 
 <div class="card shadow-sm mb-4">
   <div class="card-body">

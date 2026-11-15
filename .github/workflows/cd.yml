@@ -1,0 +1,51 @@
+name: CD
+
+# Continuous delivery: after CI has passed on main, build the Docker image
+# and publish it to the GitHub Container Registry (ghcr.io).
+on:
+  workflow_run:
+    workflows: ["CI"]   # the name of the CI workflow in ci.yml
+    types: [completed]
+  workflow_dispatch:    # manual run from the Actions tab
+
+# Least privilege: read the code, write the package. No other secrets are used.
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-image:
+    runs-on: ubuntu-latest
+    # Only publish when CI succeeded for a push to main (or when started by hand).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+
+    steps:
+      # Check out exactly the commit that CI tested (not whatever main is now).
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # Image names on ghcr.io must be lowercase, so convert owner/repo to lowercase.
+      - name: Compute image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      # Log in to ghcr.io with the token GitHub gives every run (no extra secret).
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build the image from the Dockerfile and push it with two tags:
+      # "latest" (newest build) and the commit SHA (exact, never overwritten).
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.event.workflow_run.head_sha || github.sha }}

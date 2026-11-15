@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Performance report{% endblock %}
+{% block content %}
+<style>
+  @media print {
+    nav, .no-print { display: none !important; }
+    body { background: #fff !important; }
+  }
+</style>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Performance report{% if not is_own %}: {{ student }}{% endif %}</h1>
+  <div class="no-print d-flex gap-2">
+    {% if not is_own %}<a class="btn btn-outline-secondary" href="{% url 'reporting:student_list' %}">All students</a>{% endif %}
+    {% if report %}<button class="btn btn-outline-dark" type="button" onclick="window.print()">Print / Save as PDF</button>{% endif %}
+    <form method="post" class="mb-0">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">{% if report %}Refresh report{% else %}Generate report{% endif %}</button>
+    </form>
+  </div>
+</div>
+
+{% if not report %}
+<p class="text-muted">No report has been generated yet.</p>
+{% else %}
+<p class="text-muted small">Generated {{ report.created_at|date:"Y-m-d H:i" }}</p>
+
+<table class="table table-bordered bg-white">
+  <thead class="table-light"><tr><th>Program outcome</th><th>Score</th><th>Department average</th></tr></thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      <td>PO{{ row.number }} &ndash; {{ row.name }}</td>
+      <td>
+        {% if row.score is None %}<span class="text-muted">no data</span>
+        {% else %}{{ row.score }}{% if row.incomplete %} <span class="badge text-bg-warning">incomplete</span>{% endif %}{% endif %}
+      </td>
+      <td>{% if row.average is None %}<span class="text-muted">no data</span>{% else %}{{ row.average }}{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header fw-semibold">Summary</div>
+  <div class="card-body">{{ report.summary_text }}</div>
+</div>
+
+{% if report.ai_commentary %}
+<div class="card border-info shadow-sm">
+  <div class="card-header fw-semibold">AI-generated commentary</div>
+  <div class="card-body">{{ report.ai_commentary|linebreaks }}</div>
+  <div class="card-footer text-muted small">Model: {{ report.ai_model }} &middot; {{ report.created_at|date:"Y-m-d H:i" }}. The numbers above come from the system, not from the AI.</div>
+</div>
+{% else %}
+<p class="text-muted small">AI commentary is unavailable for this report.</p>
+{% endif %}
+{% endif %}
+{% endblock %}
