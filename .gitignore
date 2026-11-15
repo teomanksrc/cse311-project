@@ -14,3 +14,6 @@ reports/*.docx
 
 # Database backups made by manage.py backup_db
 backups/
+
+# Local working notes, not part of the repository
+PLAN.md
