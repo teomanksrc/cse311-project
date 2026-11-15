@@ -85,6 +85,26 @@ python manage.py seed_demo   # reset demo data (safe to repeat)
 docker compose down          # stop PostgreSQL (data is kept in a volume)
 ```
 
+## Deployment / CD
+
+Two GitHub Actions workflows live in `.github/workflows/`:
+
+- `ci.yml` (CI): on every push and pull request it runs ruff, the migration check and the tests on PostgreSQL.
+- `cd.yml` (CD): when CI has finished successfully for a push to `main`, it checks out that exact commit, builds the `Dockerfile` and pushes the image to the GitHub Container Registry as `ghcr.io/teomanksrc/cse311-project` with two tags: `latest` and the commit SHA. It only uses the built-in `GITHUB_TOKEN`. It can also be started by hand from the Actions tab. Delivery stops at the published image; no server is deployed to yet.
+
+Run the published image against a PostgreSQL database (variables as in `.env.example`; the image has no `.env` and applies no migrations by itself):
+
+```bash
+docker pull ghcr.io/teomanksrc/cse311-project:latest   # a private package needs: docker login ghcr.io
+
+docker run -d --name po-app -p 8000:8000   -e DJANGO_SECRET_KEY=<long-random-string>   -e DJANGO_DEBUG=False   -e DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1   -e POSTGRES_DB=po_system -e POSTGRES_USER=po_user -e POSTGRES_PASSWORD=po_password   -e POSTGRES_HOST=host.docker.internal -e POSTGRES_PORT=5432   ghcr.io/teomanksrc/cse311-project:latest
+
+docker exec po-app python manage.py migrate      # deliberate step, run once per release
+docker exec po-app python manage.py seed_demo    # optional demo data
+```
+
+Then open http://localhost:8000/. If PostgreSQL is not reachable the app falls back to SQLite inside the container (see the notes above), so check `POSTGRES_HOST`. To build the image locally instead: `docker build -t po-system .`
+
 ## Documentation
 
 See [docs/](docs/): `architecture.md`, `class-diagram.md`, `data-model.md`, `design-decisions.md`, `backlog.md`.
