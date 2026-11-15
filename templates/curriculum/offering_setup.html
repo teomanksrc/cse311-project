@@ -4,6 +4,7 @@
 <a href="{% url 'grading:instructor_home' %}" class="small">&larr; My courses</a>
 <h1 class="h3 mb-1">Setup: {{ offering.course.code }} &ndash; {{ offering.course.name }}</h1>
 <p class="text-muted">{{ offering.term }}</p>
+<a class="btn btn-outline-primary mb-3" href="{% url 'curriculum:syllabus_upload' offering.id %}">Upload syllabus</a>
 
 <div class="row g-3 mb-4">
   <div class="col-md-6">

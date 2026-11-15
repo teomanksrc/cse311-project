@@ -22,4 +22,8 @@ urlpatterns = [
     ),
     path("offerings/<int:offering_id>/assessment-weights/", views.save_assessment_weights, name="assessment_weights"),
     path("offerings/<int:offering_id>/po-weights/", views.save_po_weights, name="po_weights"),
+    path("offerings/<int:offering_id>/syllabus/", views.syllabus_upload, name="syllabus_upload"),
+    path("offerings/<int:offering_id>/syllabus/review/", views.syllabus_review, name="syllabus_review"),
+    path("offerings/<int:offering_id>/syllabus/apply/", views.syllabus_apply, name="syllabus_apply"),
+    path("offerings/<int:offering_id>/syllabus/discard/", views.syllabus_discard, name="syllabus_discard"),
 ]

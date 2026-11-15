@@ -7,7 +7,8 @@ from django.views.decorators.http import require_POST
 
 from accounts.models import User
 from accounts.permissions import role_required
-from curriculum.forms import AssessmentForm, LearningOutcomeForm
+from curriculum import syllabus
+from curriculum.forms import AssessmentForm, LearningOutcomeForm, SyllabusUploadForm
 from curriculum.models import (
     Assessment,
     AssessmentLOWeight,
@@ -17,6 +18,7 @@ from curriculum.models import (
     ProgramOutcome,
 )
 from grading.models import Grade
+from reporting import llm
 from scoring.models import StudentLOScore
 from scoring.stats import refresh_department_stats
 
@@ -271,4 +273,143 @@ def save_po_weights(request, offering_id):
                     row.save()
     refresh_department_stats()  # after the commit
     messages.success(request, "Program outcome weights saved and scores recalculated.")
+    return redirect("curriculum:offering_setup", offering_id=offering.id)
+
+
+def proposal_session_key(offering):
+    return f"syllabus_proposal_{offering.id}"
+
+
+@role_required(User.Role.INSTRUCTOR)
+def syllabus_upload(request, offering_id):
+    offering = get_own_offering(request, offering_id)
+    configured = llm.is_configured()
+    form = SyllabusUploadForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and configured and form.is_valid():
+        try:
+            uploaded = form.cleaned_data["file"]
+            if uploaded:
+                text = syllabus.extract_text(uploaded.name, uploaded.read())
+            else:
+                text = form.cleaned_data["text"].strip()
+            prompt = syllabus.build_prompt(text, ProgramOutcome.objects.all())
+            reply = llm.generate_json(prompt)
+        except (ValueError, llm.LLMError) as exc:
+            messages.error(request, str(exc))
+        else:
+            po_numbers = set(ProgramOutcome.objects.values_list("number", flat=True))
+            lo_codes = offering.learning_outcomes.values_list("code", flat=True)
+            proposal, errors = syllabus.validate_proposal(reply, po_numbers, lo_codes)
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+            else:
+                request.session[proposal_session_key(offering)] = proposal
+                return redirect("curriculum:syllabus_review", offering_id=offering.id)
+    context = {"offering": offering, "form": form, "configured": configured}
+    return render(request, "curriculum/syllabus_upload.html", context)
+
+
+@role_required(User.Role.INSTRUCTOR)
+def syllabus_review(request, offering_id):
+    offering = get_own_offering(request, offering_id)
+    proposal = request.session.get(proposal_session_key(offering))
+    if proposal is None:
+        messages.error(request, "There is no syllabus proposal to review. Upload a syllabus first.")
+        return redirect("curriculum:syllabus_upload", offering_id=offering.id)
+
+    existing_los = set(offering.learning_outcomes.values_list("code", flat=True))
+    existing_assessments = set(offering.assessments.values_list("name", flat=True))
+    existing_aw = set(
+        AssessmentLOWeight.objects.filter(assessment__offering=offering).values_list(
+            "assessment__name", "learning_outcome__code"
+        )
+    )
+    existing_pw = set(
+        LOPOWeight.objects.filter(learning_outcome__offering=offering).values_list(
+            "learning_outcome__code", "program_outcome__number"
+        )
+    )
+    los = [{**lo, "exists": lo["code"] in existing_los} for lo in proposal["learning_outcomes"]]
+    assessments = [{**a, "exists": a["name"] in existing_assessments} for a in proposal["assessments"]]
+    po_links = []
+    for lo in proposal["learning_outcomes"]:
+        for link in lo["po_links"]:
+            exists = (lo["code"], link["po"]) in existing_pw
+            po_links.append({"lo": lo["code"], "po": link["po"], "weight": link["weight"], "exists": exists})
+    lo_links = []
+    for a in proposal["assessments"]:
+        for link in a["lo_weights"]:
+            exists = (a["name"], link["lo"]) in existing_aw
+            lo_links.append({"assessment": a["name"], "lo": link["lo"], "weight": link["weight"], "exists": exists})
+    context = {
+        "offering": offering,
+        "warnings": proposal["warnings"],
+        "los": los,
+        "assessments": assessments,
+        "po_links": po_links,
+        "lo_links": lo_links,
+    }
+    return render(request, "curriculum/syllabus_review.html", context)
+
+
+@role_required(User.Role.INSTRUCTOR)
+@require_POST
+def syllabus_discard(request, offering_id):
+    offering = get_own_offering(request, offering_id)
+    request.session.pop(proposal_session_key(offering), None)
+    messages.info(request, "Proposal discarded. Nothing was changed.")
+    return redirect("curriculum:offering_setup", offering_id=offering.id)
+
+
+@role_required(User.Role.INSTRUCTOR)
+@require_POST
+def syllabus_apply(request, offering_id):
+    offering = get_own_offering(request, offering_id)
+    proposal = request.session.get(proposal_session_key(offering))
+    if proposal is None:
+        messages.error(request, "There is no syllabus proposal to apply. Upload a syllabus first.")
+        return redirect("curriculum:syllabus_upload", offering_id=offering.id)
+
+    counts = {"los": 0, "assessments": 0, "po_links": 0, "lo_links": 0}
+    pos = {po.number: po for po in ProgramOutcome.objects.all()}
+    with transaction.atomic():
+        # Existing rows are never changed: only what is missing gets created.
+        los = {lo.code: lo for lo in offering.learning_outcomes.all()}
+        assessments = {a.name: a for a in offering.assessments.all()}
+        for item in proposal["learning_outcomes"]:
+            if item["code"] not in los:
+                los[item["code"]] = LearningOutcome.objects.create(
+                    offering=offering, code=item["code"], description=item["description"]
+                )
+                counts["los"] += 1
+        for item in proposal["assessments"]:
+            if item["name"] not in assessments:
+                assessments[item["name"]] = Assessment.objects.create(offering=offering, name=item["name"])
+                counts["assessments"] += 1
+        for item in proposal["learning_outcomes"]:
+            for link in item["po_links"]:
+                _, created = LOPOWeight.objects.get_or_create(
+                    learning_outcome=los[item["code"]],
+                    program_outcome=pos[link["po"]],
+                    defaults={"weight": link["weight"]},
+                )
+                counts["po_links"] += created
+        for item in proposal["assessments"]:
+            for link in item["lo_weights"]:
+                if link["lo"] not in los:  # an existing LO was deleted after the proposal was made
+                    continue
+                _, created = AssessmentLOWeight.objects.get_or_create(
+                    assessment=assessments[item["name"]],
+                    learning_outcome=los[link["lo"]],
+                    defaults={"weight": Decimal(link["weight"])},
+                )
+                counts["lo_links"] += created
+    refresh_department_stats()
+    del request.session[proposal_session_key(offering)]
+    messages.success(
+        request,
+        f"Applied: {counts['los']} learning outcomes, {counts['assessments']} assessments, "
+        f"{counts['po_links']} LO-PO weights and {counts['lo_links']} assessment-LO weights created.",
+    )
     return redirect("curriculum:offering_setup", offering_id=offering.id)
