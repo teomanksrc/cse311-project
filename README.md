@@ -80,6 +80,8 @@ Notes for both platforms:
 python manage.py test        # all tests
 ruff check . ; ruff format . # lint + format
 python manage.py seed_demo   # reset demo data (safe to repeat)
+python manage.py seed_showcase   # bigger demo: 26 students, 6 courses, all 11 POs (safe to repeat)
+python manage.py seed_showcase --remove   # back to plain seed_demo data
 docker compose down          # stop PostgreSQL (data is kept in a volume)
 ```
 
