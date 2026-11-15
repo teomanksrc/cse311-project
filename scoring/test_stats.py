@@ -92,7 +92,8 @@ class RefreshButtonTests(TestCase):
         response = self.client.get(reverse("scoring:department_dashboard"))
         self.assertEqual({r["po"].number: r["average"] for r in response.context["rows"]}[1], 10.0)
 
-    def test_dashboard_shows_the_button(self):
+    def test_dashboard_shows_the_button_and_the_coverage_link(self):
         self.client.force_login(User.objects.get(username="head"))
         response = self.client.get(reverse("scoring:department_dashboard"))
         self.assertContains(response, f'action="{self.url()}"')
+        self.assertContains(response, reverse("scoring:po_coverage"))

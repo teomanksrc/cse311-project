@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}PO coverage{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">PO coverage: which outcomes do the syllabi cover?</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'scoring:department_dashboard' %}">Department overview</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="term" class="form-select" onchange="this.form.submit()">
+      <option value="">All terms</option>
+      {% for t in terms %}<option value="{{ t }}" {% if t == term %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto"><button class="btn btn-primary" type="submit">Filter</button></div>
+</form>
+
+<table class="table table-bordered bg-white">
+  <thead class="table-light"><tr><th>Program outcome</th><th>Offerings</th><th>Learning outcomes</th><th>Sum of weights</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      <td>PO{{ row.po.number }} &ndash; {{ row.po.short_name }}</td>
+      <td>{{ row.offerings }}</td>
+      <td>{{ row.los }}</td>
+      <td>{{ row.weight_sum }}</td>
+      <td>
+        {% if row.status == "Not covered" %}<span class="badge text-bg-danger">Not covered</span>
+        {% elif row.status == "Weak" %}<span class="badge text-bg-warning">Weak</span>
+        {% else %}<span class="badge text-bg-success">Covered</span>{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="text-muted small">Weak = fewer than 2 course offerings contribute to the outcome.</p>
+{% endblock %}

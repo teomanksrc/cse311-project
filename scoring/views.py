@@ -1,13 +1,19 @@
 from django.contrib import messages
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import Coalesce
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from accounts.models import User
 from accounts.permissions import role_required
-from curriculum.models import ProgramOutcome
+from curriculum.models import CourseOffering, ProgramOutcome
 from grading.models import Enrollment
+from reporting.rules import LOW_SCORE_THRESHOLD
 from scoring.models import DepartmentPOStat, StudentLOScore, StudentPOScore
 from scoring.stats import refresh_department_stats
+
+# PO coverage thresholds: fewer contributing offerings than WEAK_BELOW_OFFERINGS is "Weak".
+WEAK_BELOW_OFFERINGS = 2
 
 
 def to_float(value):
@@ -29,6 +35,9 @@ def student_dashboard(request):
             }
         )
 
+    # Compare the full-precision score; the rounded one is for display only.
+    low_scores = [row for row in profile if row["po"].id in scores and scores[row["po"].id].score < LOW_SCORE_THRESHOLD]
+
     courses = []
     enrollments = Enrollment.objects.filter(student=request.user).select_related("offering__course")
     for enrollment in enrollments:
@@ -48,7 +57,17 @@ def student_dashboard(request):
         "labels": [f"PO{row['po'].number}" for row in profile],
         "scores": [row["score"] for row in profile],
     }
-    return render(request, "scoring/student_dashboard.html", {"profile": profile, "courses": courses, "chart": chart})
+    return render(
+        request,
+        "scoring/student_dashboard.html",
+        {
+            "profile": profile,
+            "courses": courses,
+            "chart": chart,
+            "low_scores": low_scores,
+            "threshold": LOW_SCORE_THRESHOLD,
+        },
+    )
 
 
 @role_required(User.Role.ADMIN, User.Role.HEAD)
@@ -70,3 +89,28 @@ def refresh_department(request):
     refresh_department_stats()
     messages.success(request, "Department statistics refreshed.")
     return redirect("scoring:department_dashboard")
+
+
+@role_required(User.Role.ADMIN, User.Role.HEAD)
+def po_coverage(request):
+    """Which POs are weakly covered by the syllabi? One annotated query for all POs."""
+    terms = list(CourseOffering.objects.order_by("-term").values_list("term", flat=True).distinct())
+    term = request.GET.get("term", "")
+    if term not in terms:
+        term = ""
+    in_term = Q(lo_weights__learning_outcome__offering__term=term) if term else Q()
+    pos = ProgramOutcome.objects.annotate(
+        offerings=Count("lo_weights__learning_outcome__offering", filter=in_term, distinct=True),
+        los=Count("lo_weights__learning_outcome", filter=in_term, distinct=True),
+        weight_sum=Coalesce(Sum("lo_weights__weight", filter=in_term), 0),
+    ).order_by("number")
+    rows = []
+    for po in pos:
+        if po.los == 0:
+            status = "Not covered"
+        elif po.offerings < WEAK_BELOW_OFFERINGS:
+            status = "Weak"
+        else:
+            status = "Covered"
+        rows.append({"po": po, "offerings": po.offerings, "los": po.los, "weight_sum": po.weight_sum, "status": status})
+    return render(request, "scoring/po_coverage.html", {"rows": rows, "terms": terms, "term": term})

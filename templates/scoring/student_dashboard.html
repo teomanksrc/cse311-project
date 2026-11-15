@@ -6,6 +6,18 @@
   <a class="btn btn-outline-primary" href="{% url 'reporting:my_report' %}">My report</a>
 </div>
 
+{% if low_scores %}
+<div class="alert alert-warning">
+  <strong>Low score alert.</strong> These program outcomes are below {{ threshold }}:
+  <ul class="mb-2">
+    {% for row in low_scores %}
+    <li>PO{{ row.po.number }} &ndash; {{ row.po.short_name }}: {{ row.score }}{% if row.incomplete %} (some grades are missing){% endif %}</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'reporting:my_report' %}">See My report</a>
+</div>
+{% endif %}
+
 <div class="card shadow-sm mb-4">
   <div class="card-body">
     <canvas id="po-chart" height="110"></canvas>
