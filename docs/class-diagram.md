@@ -43,6 +43,24 @@ classDiagram
         +score
         +is_incomplete
     }
+    class DepartmentPOStat {
+        <<materialized view>>
+        +average
+        +students
+        +incomplete
+    }
+    class PerformanceReport {
+        +created_at
+        +scores_snapshot : JSON
+        +summary_text
+        +ai_commentary
+        +ai_model
+    }
+    class POAlert {
+        +score
+        +created_at
+        +emailed_at
+    }
 
     Course "1" --> "*" CourseOffering
     User "1" --> "*" CourseOffering : instructor
@@ -60,6 +78,11 @@ classDiagram
     LearningOutcome "1" --> "*" StudentLOScore
     User "1" --> "*" StudentPOScore
     ProgramOutcome "1" --> "*" StudentPOScore
+    ProgramOutcome "1" --> "1" DepartmentPOStat : summarized by
+    User "1" --> "*" PerformanceReport : student
+    User "0..1" --> "*" PerformanceReport : created_by
+    User "1" --> "*" POAlert
+    ProgramOutcome "1" --> "*" POAlert
 ```
 
 ## Relationships in words
@@ -69,6 +92,8 @@ classDiagram
 - `AssessmentLOWeight` and `LOPOWeight` are association classes that carry the weights.
 - `Enrollment` ties a student to an offering; `Grade` is one score on one assessment.
 - `StudentLOScore` and `StudentPOScore` are cached results (see `data-model.md`).
+- `DepartmentPOStat` is an unmanaged model over the materialized view `scoring_department_po_stats` (one read-only row per PO).
+- `PerformanceReport` is a saved report for a student (rule-based summary plus optional AI commentary); `POAlert` is one row per student and PO whose score is below the threshold.
 
 ## Scoring code (not a model)
 

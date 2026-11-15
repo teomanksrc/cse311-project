@@ -44,7 +44,7 @@ Status: **Done** = exists in the current foundation, **Todo** = not built yet.
 |---|---|---|---|
 | E1 | As an instructor, I upload a syllabus and the LOs/assessments/weights are proposed automatically | 8 | Done (Gemini proposes, instructor approves) |
 | E2 | As an instructor, I import grades in bulk from CSV/Excel | 5 | Done |
-| E3 | As a head, I generate a student or cohort performance report (PDF) | 8 | Done per student (rule-based summary + AI commentary, print to PDF); cohort report Todo |
+| E3 | As a head, I generate a student or cohort performance report (PDF) | 8 | Done per student (rule-based summary + AI commentary, print to PDF); cohort report dropped (the department dashboard already shows the group view) |
 | E4 | As a student, I get an alert when a PO falls below a threshold | 5 | Done (dashboard warning + e-mail) |
 | E5 | As a head, I see which POs are weakly covered by the current syllabi | 5 | Done |
 
@@ -66,11 +66,8 @@ Midterms to plan around: CSE 311 on 10 Nov and 22 Dec, CSE 321 on 19 Nov and 24 
 | 1 | 26 Oct - 1 Nov | Setup, data model, scoring engine, grade entry (**27 pts**) | A1, A3, B2, C1, C2, C4 |
 | 2 | 2 - 8 Nov | PO management, validation, CI, incomplete scores, dashboards; **checkpoint prep** (**18 pts**) | A2, B1, B4, C3, D1, D2 |
 | Checkpoint | 12 / 17 Nov | Presentations and reports | |
-| 3 | 18 - 29 Nov | Instructor UI, bulk import | B3, E2 |
-| 4 | 30 Nov - 6 Dec | Syllabus upload | E1 |
-| 5 | 7 - 13 Dec | Reports and alerts | E3, E4 |
-| 6 | 14 - 20 Dec | Data systems tuning | F1, F2, F3, D3 |
-| 7 | 21 - 27 Dec | Hardening, polish, final report | F4, E5 |
+| 3 | 9 - 15 Nov | Instructor tools, AI-assisted features, alerts and coverage, data systems (**52 pts**) | B3, E2 (10); E1, E3 (16); E4, E5 (10); F1, F2, F3, F4 (16) |
+| Remaining | not yet planned | Hardening and polish, final report | |
 | Final | 29 - 30 Dec | Demo and hardcopy report | |
 
-Velocity so far: Sprint 1 = 27 points, Sprint 2 = 18 points (average 22.5). The heavier work was done in the first week; in the second week other courses' exams were approaching, so lighter stories were taken. Difficulty is rated with Fibonacci story points in planning.
+Velocity so far: Sprint 1 = 27 points, Sprint 2 = 18 points, Sprint 3 = 52 points (average 32.3; 97 points in 22 stories, D3 dropped). The heavier work of the first two sprints was done in week one; in week two other courses' exams were approaching. Sprint 3 was larger because the CSE 311 midterm of 10 Nov was behind the team and the foundation was already in place; one sprint of this size is not a forecast for later sprints. Difficulty is rated with Fibonacci story points in planning.

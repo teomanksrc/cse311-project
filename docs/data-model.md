@@ -18,6 +18,11 @@ erDiagram
     ENROLLMENT ||--o{ STUDENT_LO_SCORE : "has"
     LEARNING_OUTCOME ||--o{ STUDENT_LO_SCORE : "scored"
     PROGRAM_OUTCOME ||--o{ STUDENT_PO_SCORE : "scored"
+    PROGRAM_OUTCOME ||--|| DEPARTMENT_PO_STATS : "summarized by"
+    USER ||--o{ PERFORMANCE_REPORT : "student"
+    USER ||--o{ PERFORMANCE_REPORT : "created_by"
+    USER ||--o{ PO_ALERT : "has"
+    PROGRAM_OUTCOME ||--o{ PO_ALERT : "below threshold"
 
     USER { bigint id PK
            string username UK
@@ -64,6 +69,24 @@ erDiagram
                        bigint program_outcome_id FK
                        decimal score
                        bool is_incomplete }
+    DEPARTMENT_PO_STATS { bigint program_outcome_id UK
+                          numeric average
+                          bigint students
+                          bigint incomplete }
+    PERFORMANCE_REPORT { bigint id PK
+                         bigint student_id FK
+                         bigint created_by_id FK
+                         timestamptz created_at
+                         jsonb scores_snapshot
+                         text summary_text
+                         text ai_commentary
+                         varchar ai_model }
+    PO_ALERT { bigint id PK
+               bigint student_id FK
+               bigint program_outcome_id FK
+               numeric score
+               timestamptz created_at
+               timestamptz emailed_at }
 ```
 
 ## Tables
@@ -82,6 +105,9 @@ erDiagram
 | `grading_grade` | One score on one assessment | unique (enrollment, assessment); CHECK 0 <= score <= 100; FK indexes on `assessment_id` and `enrollment_id` (created by Django) |
 | `scoring_studentloscore` | **Cached** LO score | unique (enrollment, LO) |
 | `scoring_studentposcore` | **Cached** PO score | unique (student, PO); FK index on `program_outcome_id` |
+| `scoring_department_po_stats` | **Materialized view**: per-PO average, student count, incomplete count (created by migration `scoring/0003`, read through the unmanaged model `DepartmentPOStat`) | unique index on `program_outcome_id` |
+| `reporting_performancereport` | Saved performance report (rule-based summary, optional AI commentary) | FKs `student_id` (CASCADE) and `created_by_id` (SET NULL, nullable) |
+| `alerts_poalert` | Low-score alert, one per student and PO; `emailed_at` empty until mailed | unique (student, PO) |
 
 ## Normalized vs denormalized
 
@@ -96,7 +122,7 @@ Measured with `python manage.py db_stats` on a generated 2,000-student database:
 (rows, columns, table / index / total size per table), the query plans and the index decision. The materialized view
 `scoring_department_po_stats` (unmanaged model `DepartmentPOStat`) holds the 11 department averages.
 
-## Planned for the final
+## Planned (not built)
 
 Partitioning of `grading_grade` by term and a read replica are **plans only**, described in `docs/scalability.md`
 together with the fault-tolerance measures (backups, restore, atomic saves).

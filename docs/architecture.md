@@ -1,6 +1,6 @@
 # System architecture
 
-Solid boxes exist today. Dashed boxes are **planned** (not built yet).
+Solid boxes are part of the running system. Dashed boxes are development-only or optional.
 
 ```mermaid
 flowchart LR
@@ -10,35 +10,39 @@ flowchart LR
         H[Department Head / Admin]
     end
 
-    B[Browser<br/>Bootstrap + Chart.js]
+    B[Browser<br/>Bootstrap 5 + Chart.js]
 
-    subgraph Django["Django web app (Python)"]
+    subgraph Django["Django 5.2 web app (Python 3.12, gunicorn + WhiteNoise in Docker)"]
         A[accounts<br/>login, roles]
-        C[curriculum<br/>POs, courses, LOs, weights]
-        G[grading<br/>enrollments, grades]
-        SC[scoring<br/>pure service + recompute + dashboards]
+        C[curriculum<br/>POs, courses, LOs, weights,<br/>instructor setup UI, syllabus upload]
+        G[grading<br/>enrollments, grades,<br/>grade entry, CSV/XLSX import]
+        SC[scoring<br/>signals, recompute, pure services,<br/>dashboards, PO coverage]
+        RP[reporting<br/>performance report:<br/>rule-based summary + AI commentary]
+        AL[alerts<br/>low-score alerts]
     end
 
-    DB[(PostgreSQL 16)]
-    SQLITE[(SQLite<br/>local fallback)]
+    DB[(PostgreSQL 16<br/>READ COMMITTED)]
+    MV[[Materialized view<br/>scoring_department_po_stats]]
+    SQLITE[(SQLite<br/>development-only fallback)]
 
-    CACHE[[Cache<br/>planned]]
-    AL[alerts<br/>low-score e-mail]
-    MAIL[[E-mail<br/>console backend, SMTP by config]]
-    EXT[[3rd-party integrations<br/>OBS / LMS import<br/>planned]]
-    AI[[AI report + syllabus upload<br/>planned]]
+    GEM[[Google Gemini API<br/>only anonymous PO scores are sent]]
+    MAIL[[E-mail<br/>console backend, SMTP optional]]
+    FILES[[CSV / Excel files<br/>bulk grade import]]
+
+    GH[GitHub repository] --> CI[GitHub Actions CI<br/>ruff, migration check, tests on PostgreSQL]
+    CI --> CD[CD: Docker image<br/>published to ghcr.io]
 
     S & I & H --> B --> Django
-    A & C & G & SC & AL --> DB
+    A & C & G & SC & RP & AL --> DB
+    DB --- MV
     Django -. dev fallback .-> SQLITE
-    SC -.-> CACHE
+    RP -.-> GEM
+    C -.-> GEM
     AL --> MAIL
-    Django -.-> EXT
-    Django -.-> AI
+    FILES --> G
 
-    style CACHE stroke-dasharray: 5 5
-    style EXT stroke-dasharray: 5 5
-    style AI stroke-dasharray: 5 5
+    style SQLITE stroke-dasharray: 5 5
+    style GEM stroke-dasharray: 5 5
 ```
 
 ## Request flow: an instructor saves grades
@@ -71,7 +75,7 @@ sequenceDiagram
 | Presentation | `templates/`, views | Role checks on the server (`accounts.permissions.role_required`) |
 | Domain logic | `scoring/services.py` | Pure Python, no Django, unit-tested |
 | Orchestration | `scoring/recompute.py`, `scoring/signals.py` | Reads DB, calls the service, stores cached scores, always inside `transaction.atomic` |
-| Persistence | models + migrations | Constraints enforced in the DB, not only in forms |
+| Persistence | models + migrations | Constraints enforced in the DB, not only in forms; the department averages come from a materialized view |
 
 ## Notifications (low-score alerts)
 
@@ -82,3 +86,15 @@ The `alerts` app e-mails a student when a PO score is below the threshold (`repo
 dashboard. E-mail is deliberately not sent from signals or the recompute (see `docs/design-decisions.md`).
 By default Django's console backend prints the message in the terminal; real SMTP is chosen with the `EMAIL_*`
 environment variables (see `.env.example`).
+
+## AI commentary and syllabus upload
+
+`reporting` (performance report commentary) and `curriculum.syllabus` (syllabus upload) call the Google Gemini API
+(`GEMINI_API_KEY`, `GEMINI_MODEL`). Only anonymous PO scores are sent, never names or student numbers. Without a key
+the report still has its rule-based summary.
+
+## Delivery
+
+GitHub Actions CI runs ruff, a migration check and the test suite on PostgreSQL. After CI passes on `main`, the CD
+workflow builds the Docker image (gunicorn + WhiteNoise) and publishes it to ghcr.io. There is no deployed production
+server; migrations are run on purpose by whoever starts the container.
