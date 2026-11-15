@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Assessment{% endblock %}
+{% block content %}
+<a href="{% url 'curriculum:offering_setup' offering.id %}" class="small">&larr; Setup</a>
+<h1 class="h3 mb-3">{% if assessment %}Rename{% else %}Add{% endif %} assessment</h1>
+<form method="post" style="max-width: 560px">
+  {% csrf_token %}
+  {{ form.as_div }}
+  <button class="btn btn-primary" type="submit">Save</button>
+</form>
+{% endblock %}

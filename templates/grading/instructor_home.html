@@ -4,7 +4,12 @@
 <h1 class="h3 mb-4">My course offerings</h1>
 {% for offering in offerings %}
 <div class="card shadow-sm mb-3">
-  <div class="card-header fw-semibold">{{ offering.course.code }} &ndash; {{ offering.course.name }} <span class="text-muted">({{ offering.term }})</span></div>
+  <div class="card-header fw-semibold">{{ offering.course.code }} &ndash; {{ offering.course.name }} <span class="text-muted">({{ offering.term }})</span>
+    <span class="float-end">
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'curriculum:offering_setup' offering.id %}">Setup</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'grading:import_grades' offering.id %}">Import grades</a>
+    </span>
+  </div>
   <ul class="list-group list-group-flush">
     {% for assessment in offering.assessments.all %}
     <li class="list-group-item d-flex justify-content-between align-items-center">

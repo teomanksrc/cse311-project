@@ -18,7 +18,7 @@ Status: **Done** = exists in the current foundation, **Todo** = not built yet.
 |---|---|---|---|
 | B1 | As a head, I can manage the 11 POs | 2 | Done (admin site) |
 | B2 | As a head, I can create courses, offerings and assign instructors | 3 | Done (admin site) |
-| B3 | As an instructor, I can define LOs, assessments and weights for my offering | 5 | Todo (instructor UI; admin site works today) |
+| B3 | As an instructor, I can define LOs, assessments and weights for my offering | 5 | Done |
 | B4 | As an instructor, weights are validated (positive, 1-5) | 2 | Done |
 
 ## Epic C: Grades and scores
@@ -43,7 +43,7 @@ Status: **Done** = exists in the current foundation, **Todo** = not built yet.
 | # | User story | Pts | Status |
 |---|---|---|---|
 | E1 | As an instructor, I upload a syllabus and the LOs/assessments/weights are proposed automatically | 8 | Todo |
-| E2 | As an instructor, I import grades in bulk from CSV/Excel | 5 | Todo |
+| E2 | As an instructor, I import grades in bulk from CSV/Excel | 5 | Done |
 | E3 | As a head, I generate a student or cohort performance report (PDF) | 8 | Todo |
 | E4 | As a student, I get an alert when a PO falls below a threshold | 5 | Todo |
 | E5 | As a head, I see which POs are weakly covered by the current syllabi | 5 | Todo |
