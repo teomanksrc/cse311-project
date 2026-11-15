@@ -11,3 +11,6 @@ staticfiles/
 
 # Report Word files are handed in as hardcopy, not kept in the repository
 reports/*.docx
+
+# Database backups made by manage.py backup_db
+backups/

@@ -52,10 +52,10 @@ Status: **Done** = exists in the current foundation, **Todo** = not built yet.
 
 | # | User story | Pts | Status |
 |---|---|---|---|
-| F1 | Index tuning from real query plans | 3 | Todo |
-| F2 | Materialized view for department averages | 5 | Todo |
-| F3 | Partitioning and replication plan | 5 | Todo |
-| F4 | Failure handling and backups | 3 | Todo |
+| F1 | Index tuning from real query plans | 3 | Done (measured: no extra index needed, see docs/performance.md) |
+| F2 | Materialized view for department averages | 5 | Done |
+| F3 | Partitioning and replication plan | 5 | Done (plan in docs/scalability.md) |
+| F4 | Failure handling and backups | 3 | Done |
 
 ## Proposed sprints (1 week each)
 

@@ -1,11 +1,13 @@
-from django.db.models import Avg, Count, Q
-from django.shortcuts import render
+from django.contrib import messages
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 from accounts.models import User
 from accounts.permissions import role_required
 from curriculum.models import ProgramOutcome
 from grading.models import Enrollment
-from scoring.models import StudentLOScore, StudentPOScore
+from scoring.models import DepartmentPOStat, StudentLOScore, StudentPOScore
+from scoring.stats import refresh_department_stats
 
 
 def to_float(value):
@@ -51,14 +53,20 @@ def student_dashboard(request):
 
 @role_required(User.Role.ADMIN, User.Role.HEAD)
 def department_dashboard(request):
-    stats = ProgramOutcome.objects.annotate(
-        average=Avg("student_scores__score"),
-        students=Count("student_scores"),
-        incomplete=Count("student_scores", filter=Q(student_scores__is_incomplete=True)),
-    ).order_by("number")
+    # Reads the (materialized) view; see scoring/stats.py for when it is refreshed.
+    stats = DepartmentPOStat.objects.select_related("program_outcome").order_by("program_outcome__number")
     rows = [
-        {"po": po, "average": to_float(po.average), "students": po.students, "incomplete": po.incomplete}
-        for po in stats
+        {"po": s.program_outcome, "average": to_float(s.average), "students": s.students, "incomplete": s.incomplete}
+        for s in stats
     ]
     chart = {"labels": [f"PO{r['po'].number}" for r in rows], "scores": [r["average"] for r in rows]}
     return render(request, "scoring/department_dashboard.html", {"rows": rows, "chart": chart})
+
+
+@require_POST
+@role_required(User.Role.ADMIN, User.Role.HEAD)
+def refresh_department(request):
+    """For changes made in the Django admin site, which do not pass through the grade-entry views."""
+    refresh_department_stats()
+    messages.success(request, "Department statistics refreshed.")
+    return redirect("scoring:department_dashboard")

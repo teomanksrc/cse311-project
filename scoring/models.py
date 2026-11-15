@@ -39,3 +39,22 @@ class StudentPOScore(models.Model):
 
     def __str__(self):
         return f"{self.student} PO{self.program_outcome.number}: {self.score}"
+
+
+class DepartmentPOStat(models.Model):
+    """Read-only row of the ``scoring_department_po_stats`` (materialized) view: one row per PO.
+
+    The view is created by migration 0003, not by Django (``managed = False``).
+    """
+
+    program_outcome = models.OneToOneField(ProgramOutcome, primary_key=True, on_delete=models.DO_NOTHING)
+    average = models.DecimalField(max_digits=12, decimal_places=6, null=True)
+    students = models.IntegerField()
+    incomplete = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = "scoring_department_po_stats"
+
+    def __str__(self):
+        return f"PO{self.program_outcome.number}: {self.average}"

@@ -4,6 +4,10 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1 class="h3 mb-0">Department overview: average score per Program Outcome</h1>
   <div class="d-flex gap-2">
+    <form method="post" action="{% url 'scoring:refresh_department' %}" class="mb-0">
+      {% csrf_token %}
+      <button class="btn btn-outline-secondary" type="submit" title="Needed after edits made in the admin site">Refresh</button>
+    </form>
     <a class="btn btn-outline-primary" href="{% url 'reporting:student_list' %}">Student reports</a>
   </div>
 </div>
