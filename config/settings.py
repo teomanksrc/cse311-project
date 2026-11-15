@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "curriculum",
     "grading",
     "scoring",
+    "reporting",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -125,6 +126,10 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Optional AI features (report commentary, syllabus parsing). Empty key = AI switched off.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-lite-latest").strip()
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "home"
