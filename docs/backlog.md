@@ -46,7 +46,7 @@ Status: **Done** = exists in the current foundation, **Todo** = not built yet.
 | E2 | As an instructor, I import grades in bulk from CSV/Excel | 5 | Done |
 | E3 | As a head, I generate a student or cohort performance report (PDF) | 8 | Done per student (rule-based summary + AI commentary, print to PDF); cohort report Todo |
 | E4 | As a student, I get an alert when a PO falls below a threshold | 5 | Todo |
-| E5 | As a head, I see which POs are weakly covered by the current syllabi | 5 | Todo |
+| E5 | As a head, I see which POs are weakly covered by the current syllabi | 5 | Done |
 
 ## Epic F: Data systems (CSE 321)
 

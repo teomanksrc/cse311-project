@@ -8,6 +8,7 @@
       {% csrf_token %}
       <button class="btn btn-outline-secondary" type="submit" title="Needed after edits made in the admin site">Refresh</button>
     </form>
+    <a class="btn btn-outline-primary" href="{% url 'scoring:po_coverage' %}">PO coverage</a>
     <a class="btn btn-outline-primary" href="{% url 'reporting:student_list' %}">Student reports</a>
   </div>
 </div>
