@@ -46,9 +46,10 @@
     <div class="col-md-6">
       <h3 class="h6">Grades</h3>
       <ul class="list-unstyled mb-0">
-        {% for grade in course.grades %}<li>{{ grade.assessment.name }}: <strong>{{ grade.score }}</strong></li>
-        {% empty %}<li class="text-muted">No grades yet.</li>{% endfor %}
+        {% for grade in course.grades %}<li>{{ grade.assessment.name }}: {% if grade.score is None %}<span class="badge text-bg-secondary" title="Not graded yet">NG</span>{% else %}<strong>{{ grade.score }}</strong>{% endif %}</li>
+        {% empty %}<li class="text-muted">No assessments yet.</li>{% endfor %}
       </ul>
+      {% if course.has_ng %}<p class="small text-muted mt-2 mb-0">NG = not graded yet. Scores marked incomplete are calculated without it.</p>{% endif %}
     </div>
     <div class="col-md-6">
       <h3 class="h6">Learning outcomes</h3>

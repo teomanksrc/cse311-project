@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 from accounts.models import User
 from accounts.permissions import role_required
 from curriculum.models import CourseOffering, ProgramOutcome
-from grading.models import Enrollment
+from grading.models import Enrollment, Grade
 from reporting.rules import LOW_SCORE_THRESHOLD
 from scoring.models import DepartmentPOStat, StudentLOScore, StudentPOScore
 from scoring.stats import refresh_department_stats
@@ -39,13 +39,27 @@ def student_dashboard(request):
     low_scores = [row for row in profile if row["po"].id in scores and scores[row["po"].id].score < LOW_SCORE_THRESHOLD]
 
     courses = []
-    enrollments = Enrollment.objects.filter(student=request.user).select_related("offering__course")
+    enrollments = (
+        Enrollment.objects.filter(student=request.user)
+        .select_related("offering__course")
+        .prefetch_related("offering__assessments")
+    )
+    # One query for all of this student's grades: {(enrollment id, assessment id): score}
+    grade_scores = {
+        (g.enrollment_id, g.assessment_id): g.score for g in Grade.objects.filter(enrollment__student=request.user)
+    }
     for enrollment in enrollments:
         lo_scores = StudentLOScore.objects.filter(enrollment=enrollment).select_related("learning_outcome")
+        # Every assessment of the offering; score is None when it has not been graded.
+        grades = [
+            {"assessment": a, "score": grade_scores.get((enrollment.id, a.id))}
+            for a in enrollment.offering.assessments.all()
+        ]
         courses.append(
             {
                 "offering": enrollment.offering,
-                "grades": enrollment.grades.select_related("assessment").order_by("assessment__name"),
+                "grades": grades,
+                "has_ng": any(g["score"] is None for g in grades),
                 "lo_scores": [
                     {"lo": s.learning_outcome, "score": to_float(s.score), "incomplete": s.is_incomplete}
                     for s in lo_scores

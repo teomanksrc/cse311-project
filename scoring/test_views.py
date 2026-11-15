@@ -91,7 +91,8 @@ class StudentIsolationTests(ViewTestBase):
         for course in response.context["courses"]:
             self.assertEqual(course["offering"].enrollments.filter(student=self.elif_).count(), 1)
             for grade in course["grades"]:
-                self.assertEqual(grade.enrollment.student, self.elif_)
+                own_grade = Grade.objects.filter(enrollment__student=self.elif_, assessment=grade["assessment"])
+                self.assertEqual(own_grade.exists(), grade["score"] is not None)
 
     def test_other_students_grades_do_not_appear_in_page(self):
         # Give Can a recognisable grade and make sure Elif's page does not contain it.
@@ -99,6 +100,29 @@ class StudentIsolationTests(ViewTestBase):
         Grade.objects.filter(enrollment=enrollment, assessment__name="Final").update(score=Decimal("77.77"))
         self.login("Batuhan")
         self.assertNotContains(self.client.get(reverse("scoring:student_dashboard")), "77.77")
+
+    def test_missing_grade_is_shown_as_ng(self):
+        grade = Grade.objects.filter(enrollment__student=self.elif_, assessment__name="Midterm").first()
+        grade.delete()
+        self.login("Batuhan")
+        response = self.client.get(reverse("scoring:student_dashboard"))
+        course = next(c for c in response.context["courses"] if c["offering"] == grade.enrollment.offering)
+        self.assertTrue(course["has_ng"])
+        self.assertContains(response, "Midterm: <span")
+        self.assertContains(response, ">NG</span>")
+        self.assertContains(response, "NG = not graded yet.")
+
+    def test_complete_student_sees_no_ng(self):
+        # Make Can's missing grades (if any) irrelevant: Elif has every grade in the seed data.
+        self.login("Batuhan")
+        response = self.client.get(reverse("scoring:student_dashboard"))
+        self.assertNotContains(response, ">NG</span>")
+        self.assertNotContains(response, "NG = not graded yet.")
+
+    def test_other_students_missing_grade_does_not_show_ng(self):
+        Grade.objects.filter(enrollment__student=self.can).delete()
+        self.login("Batuhan")
+        self.assertNotContains(self.client.get(reverse("scoring:student_dashboard")), ">NG</span>")
 
     def test_dashboard_ignores_student_id_query_parameters(self):
         self.login("Batuhan")
